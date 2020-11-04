@@ -1,2 +1,4 @@
 
-DATAS/RAW/
+DATAS/
+
+__pycache__/

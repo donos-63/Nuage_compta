@@ -33,6 +33,9 @@ def ensure_data_loaded(car_path):
         if os.path.exists(f'{RAW_LOCAL_PATH}{cp}') == False:
             extract_data(cp)
 
+    if os.path.exists(f'{RAW_LOCAL_PATH}alphabet-dataset/handwritten-data.csv') == False:
+        extract_data('alphabet-dataset/handwritten-data.csv')
+
     print ('Datas are successfully loaded.\n')
 
 
@@ -44,11 +47,14 @@ def dl_data ():
     print ('Dataset dowloaded successfully.')
 
 
-def extract_data(car_path):
-    print ('Extracting...')
+def extract_data(path):
+    print (f'Extracting {path}...')
     with zipfile.ZipFile(ZIP_LOCAL_PATH, 'r') as z:
-        z.extract(car_path, RAW_LOCAL_PATH)
-        z.extract('handwritten-data.csv', RAW_LOCAL_PATH)
-    print ('Dataset extracted successfully.')
+        z.extract(filename, RAW_LOCAL_PATH)   
+        for filename in z.namelist():
+            if filename.startswith(path):
+                z.extract(filename, RAW_LOCAL_PATH)
+
+    print ('Successfull.')
 
 
