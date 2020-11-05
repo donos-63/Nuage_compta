@@ -154,7 +154,7 @@ data/in/*
 data/out/*
 data/curated/*
 !*.gitkeep
-
+!formation-data_ia_test.jpeg
 
 
 
