@@ -1,8 +1,12 @@
 import os
 import zipfile
 import requests
+from PIL import Image
+import numpy as np
+import sys
+import csv
 
-
+alphabet = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
 
 # Définition des variables
 DATAS_LOCAL_PATH = './DATAS/'
@@ -50,7 +54,7 @@ def dl_data ():
 def extract_data(path):
     print (f'Extracting {path}...')
     with zipfile.ZipFile(ZIP_LOCAL_PATH, 'r') as z:
-        z.extract(filename, RAW_LOCAL_PATH)   
+        z.extract(path, RAW_LOCAL_PATH)   
         for filename in z.namelist():
             if filename.startswith(path):
                 z.extract(filename, RAW_LOCAL_PATH)
@@ -58,3 +62,46 @@ def extract_data(path):
     print ('Successfull.')
 
 
+def png_to_csv (car_path) :
+
+    fullRawDir = []
+
+    for cp in car_path :
+        frd = f'{RAW_LOCAL_PATH}{cp}'
+        fullRawDir.append(frd)
+
+    form='.png'
+    fileList = []
+
+    for directory in fullRawDir :
+        for root, dirs, files in os.walk(directory, topdown=False):
+            n = 0
+            for name in files:
+                if n == 1000 :
+                    break
+                else :
+                    if name.endswith(form):
+                        fullName = f'{root}{name}'
+                        fileList.append(fullName)
+                        n += 1
+    
+    if os.path.exists('./DATAS/CURATED/dataset.csv') :
+        os.remove('./DATAS/CURATED/dataset.csv')
+
+    with open('./DATAS/CURATED/dataset.csv', 'a') as f:
+        for filename in fileList:
+
+            lettre = filename[29]
+            label = alphabet.index(lettre)
+
+            img_file = Image.open(filename)
+
+            value = np.asarray(img_file.getdata(),dtype=np.int).reshape((img_file.size[1],img_file.size[0]))
+            value = np.insert(value, 0, label)
+            value = value.flatten()
+
+            with open('./DATAS/CURATED/dataset.csv', 'a', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(value)
+    
+    print ('All png files convert to a csv file.')
