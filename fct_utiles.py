@@ -62,7 +62,7 @@ def extract_data(path):
     print ('Successfull.')
 
 
-def png_to_csv (car_path) :
+def png_to_csv (car_path, number) :
 
     fullRawDir = []
 
@@ -77,7 +77,7 @@ def png_to_csv (car_path) :
         for root, dirs, files in os.walk(directory, topdown=False):
             n = 0
             for name in files:
-                if n == 1000 :
+                if n == number :
                     break
                 else :
                     if name.endswith(form):
