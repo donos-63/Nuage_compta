@@ -25,7 +25,7 @@ def compute_character(character, prefix, characters_referential):
     output_folder = os.path.join( file_help.DATA_OUT_FOLDER,file_help.MODELS_FOLDER)
     prep_mod.prepare_model(character_value_index, prefix, input_folder, output_folder)
 
-compute_character('Z', 'a-z', GLOBAL_LETTERS)
+compute_character('Z', 'a_z', GLOBAL_LETTERS)
 
 
 '''
