@@ -13,6 +13,7 @@ DATAS_LOCAL_PATH = './DATAS/'
 RAW_LOCAL_PATH = DATAS_LOCAL_PATH + 'RAW/'
 ZIP_LOCAL_PATH = RAW_LOCAL_PATH + 'alphabet-dataset.zip'
 CURATED_LOCAL_PATH = DATAS_LOCAL_PATH + 'CURATED/'
+DATASET_PATH = CURATED_LOCAL_PATH + 'dataset.csv'
 URL = 'https://stdatalake006.blob.core.windows.net/public/alphabet-dataset.zip'
 
 
@@ -85,10 +86,10 @@ def png_to_csv (car_path, number) :
                         fileList.append(fullName)
                         n += 1
     
-    if os.path.exists('./DATAS/CURATED/dataset.csv') :
-        os.remove('./DATAS/CURATED/dataset.csv')
+    if os.path.exists(DATASET_PATH) :
+        os.remove(DATASET_PATH)
 
-    with open('./DATAS/CURATED/dataset.csv', 'a') as f:
+    with open(DATASET_PATH, 'a') as f:
         for filename in fileList:
 
             lettre = filename[29]
@@ -100,7 +101,7 @@ def png_to_csv (car_path, number) :
             value = np.insert(value, 0, label)
             value = value.flatten()
 
-            with open('./DATAS/CURATED/dataset.csv', 'a', newline='') as f:
+            with open(DATASET_PATH, 'a', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow(value)
     
