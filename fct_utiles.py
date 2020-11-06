@@ -14,12 +14,13 @@ RAW_LOCAL_PATH = DATAS_LOCAL_PATH + 'RAW/'
 ZIP_LOCAL_PATH = RAW_LOCAL_PATH + 'alphabet-dataset.zip'
 CURATED_LOCAL_PATH = DATAS_LOCAL_PATH + 'CURATED/'
 DATASET_PATH = CURATED_LOCAL_PATH + 'dataset.csv'
+MODELS_LOCAL_PATH = './MODELS/'
 URL = 'https://stdatalake006.blob.core.windows.net/public/alphabet-dataset.zip'
 
 
 
 def check_folder ():
-    PATH = [DATAS_LOCAL_PATH, RAW_LOCAL_PATH, CURATED_LOCAL_PATH]
+    PATH = [DATAS_LOCAL_PATH, RAW_LOCAL_PATH, CURATED_LOCAL_PATH, MODELS_LOCAL_PATH]
     for p in PATH:
         if not os.path.exists(p):
             os.mkdir(p)
