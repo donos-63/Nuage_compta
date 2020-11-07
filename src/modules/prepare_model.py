@@ -25,36 +25,27 @@ from modules.tools.data_helper import load_mnist_dataset
 from modules.tools.data_helper import load_az_dataset
 from modules.models.resnet import ResNet
 import modules.tools.file_helper as file_help
+from tensorflow.python.keras.callbacks import CSVLogger
 
-def prepare_model(identifier, prefix, dataset_path, output_path):
-    output_model_file = file_help.generate_model_name(identifier, prefix)
-    output_plot_file =file_help.generate_plot_name(identifier, prefix)
-
+def prepare_model(dataset_path, output_path):
     # initialize the number of epochs to train for, initial learning rate,
     # and batch size
-    EPOCHS = 1 #50
+    EPOCHS = 10 #50
     INIT_LR = 1e-1
-    BS = 5 #128
+    BATCH_SIZE = 32 #128
 
     # load the A-Z and MNIST datasets, respectively
     print("[INFO] loading datasets...")
-    (azData, azLabels) = load_az_dataset(dataset_path)
-    (digitsData, digitsLabels) = load_mnist_dataset()
+    (data, labels) = load_az_dataset(dataset_path)
 
-    # the MNIST dataset occupies the labels 0-9, so let's add 10 to every
-    # A-Z label to ensure the A-Z characters are not incorrectly labeled
-    # as digits
-    azLabels += 10
-
-    # stack the A-Z data and labels with the MNIST digits data and labels
-    data = np.vstack([azData, digitsData])
-    labels = np.hstack([azLabels, digitsLabels])
+    tmp = np.array(labels) 
+    labels_proceed = np.unique(tmp)
 
     # each image in the A-Z and MNIST digts datasets are 28x28 pixels;
     # however, the architecture we're using is designed for 32x32 images,
     # so we need to resize them to 32x32
-    data = [cv2.resize(image, (32, 32)) for image in data]
-    data = np.array(data, dtype="float32")
+    #data = [cv2.resize(image, (32, 32)) for image in data]
+    #data = np.array(data, dtype="float32")
 
     # add a channel dimension to every image in the dataset and scale the
     # pixel intensities of the images from [0, 255] down to [0, 1]
@@ -89,49 +80,59 @@ def prepare_model(identifier, prefix, dataset_path, output_path):
         horizontal_flip=False,
         fill_mode="nearest")
 
-    labelNames = [identifier]
+    # define the list of label names
+    labelNames = "0123456789"
+    labelNames += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    labelNames = [l for l in labelNames]
+    labelNames = [labelNames[i] for i in labels_proceed]
 
     # initialize and compile our deep neural network
     # print("[INFO] compiling model...")
     opt = SGD(lr=INIT_LR, decay=INIT_LR / EPOCHS)
-    model = ResNet.build(32, 32, 1, len(le.classes_), (3, 3, 3),
+    model = ResNet.build(28, 28, 1, len(le.classes_), (3, 3, 3),
             (64, 64, 128, 256), reg=0.0005)
     model.compile(loss="categorical_crossentropy", optimizer=opt,
             metrics=["accuracy"])
 
-    # train the network
-    print("[INFO] training network...")
-    H = model.fit(
-            aug.flow(trainX, trainY, batch_size=BS),
-            validation_data=(testX, testY),
-            steps_per_epoch=len(trainX) // BS,
-            epochs=EPOCHS,
-            class_weight=classWeight,
-            verbose=1)
+    if os.path.exists(os.path.join(output_path, file_help.DEFAULT_MODEL_NAME)):
+        print("model already computed in "+ os.path.join(output_path, file_help.DEFAULT_MODEL_NAME))
+        model = models.load_model(os.path.join(output_path, file_help.DEFAULT_MODEL_NAME))
+        histo = file_help.load_training_history()
+    else:
+        # train the network
+        print("[INFO] training network...")
+        csv_logger = CSVLogger(os.path.join(file_help.DATA_OUT_FOLDER, file_help.MODELS_FOLDER, file_help.DEFAULT_HISTORY_NAME), append=False, separator=';')
+        H = model.fit(
+                aug.flow(trainX, trainY, batch_size=BATCH_SIZE),
+                validation_data=(testX, testY),
+                steps_per_epoch=BATCH_SIZE,
+                epochs=EPOCHS,
+                class_weight=classWeight,
+                verbose=1,
+                callbacks=[csv_logger])
 
-    # save the model to disk
-    print("[INFO] serializing network...")
-    model.save(os.path.join(output_path, output_model_file))
-    
-    # evaluate the network
-    print("[INFO] evaluating network...")
-    predictions = model.predict(testX, batch_size=BS)
-    print(classification_report(testY.argmax(axis=1),
-    predictions.argmax(axis=1), target_names=labelNames))
+        # save the model to disk
+        print("[INFO] serializing network...")
+        model.save(os.path.join(output_path, file_help.DEFAULT_MODEL_NAME))
 
-    # construct a plot that plots and saves the training history
-    N = np.arange(0, EPOCHS)
-    plt.style.use("ggplot")
-    plt.figure()
-    plt.plot(N, H.history["loss"], label="train_loss")
-    plt.plot(N, H.history["val_loss"], label="val_loss")
-    plt.title("Training Loss and Accuracy")
-    plt.xlabel("Epoch #")
-    plt.ylabel("Loss/Accuracy")
-    plt.legend(loc="lower left")
-    plt.savefig(os.path.join(output_path, output_plot_file))
-    plt.show()
+        # construct a plot that plots and saves the training history
+        # evaluate the network
+        print("[INFO] evaluating network...")
+        predictions = model.predict(testX, batch_size=BATCH_SIZE)
+        print(classification_report(testY.argmax(axis=1),
+        predictions.argmax(axis=1), target_names=labelNames))
+        
+        N = np.arange(0, EPOCHS)
+        plt.style.use("ggplot")
+        plt.figure()
+        plt.plot(N, H.history["loss"], label="train_loss")
+        plt.plot(N, H.history["val_loss"], label="val_loss")
+        plt.title("Training Loss and Accuracy")
+        plt.xlabel("Epoch #")
+        plt.ylabel("Loss/Accuracy")
+        plt.legend(loc="lower left")
+        plt.savefig(os.path.join(output_path, file_help.DEFAULT_PLOT_NAME))
 
 if __name__ == "__main__":
     #test with Z
-    prepare_model(25, "a_z", 'C:\\prairie\\projet9\\Nuage_compta\\data\\out\\alphabet-dataset\\25_a_z_handwritten_data.csv', 'C:\\prairie\\projet9\\Nuage_compta\\data\\out\\models')
+    prepare_model('C:\\prairie\\projet9\\Nuage_compta\\data\\curated\\handwritten_data.csv', 'C:\\prairie\\projet9\\Nuage_compta\\data\\out\\models')

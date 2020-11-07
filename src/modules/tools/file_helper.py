@@ -3,6 +3,7 @@ import sys
 import requests
 from hurry.filesize import size
 import zipfile
+import pickle
 
 def get_root():
     path = os.getcwd()    
@@ -27,23 +28,19 @@ ALPHABET_DATASET_FOLDER = "alphabet-dataset"
 MODELS_FOLDER = "models"
 DEFAULT_PICTURE_NAME = "handwritten_data.csv"
 DEFAULT_MODEL_NAME = "handwriting.model"
+DEFAULT_HISTORY_NAME = "handwriting.histo"
 DEFAULT_PLOT_NAME = "plot.png"
 DOWNLOADED_FILE_NAME = r'alphabet.zip'
 
 DATASOURCE_DEST = os.path.join(DATA_IN_FOLDER, DOWNLOADED_FILE_NAME)
 
-def generate_picture_name(identifier, prefix):
-    return __generate_standard_file_name(identifier, prefix, DEFAULT_PICTURE_NAME)
+def save_training_history(model_history):
+    # Save it under the form of a json file
+    with open(os.path.join(DATA_OUT_FOLDER, MODELS_FOLDER, DEFAULT_HISTORY_NAME), 'wb') as file_histo:
+        pickle.dump(model_history.history, file_histo)
 
-def generate_model_name(identifier, prefix):
-    return __generate_standard_file_name(identifier, prefix, DEFAULT_MODEL_NAME)
-
-def generate_plot_name(identifier, prefix):
-    return __generate_standard_file_name(identifier, prefix, DEFAULT_PLOT_NAME)
-
-def __generate_standard_file_name(identifier, prefix, extension):
-    return str.format("%s_%s_%s" % (identifier, prefix, extension))
-
+def load_training_history():
+    return pickle.load(open(os.path.join(DATA_OUT_FOLDER, MODELS_FOLDER, DEFAULT_HISTORY_NAME), 'r', encoding="utf8"))
 
 def __download_data():
     if os.path.exists(os.path.join(DATA_IN_FOLDER, DOWNLOADED_FILE_NAME)):

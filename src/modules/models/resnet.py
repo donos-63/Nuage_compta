@@ -95,7 +95,7 @@ class ResNet:
 		x = BatchNormalization(axis=chanDim, epsilon=bnEps,
 			momentum=bnMom)(x)
 		x = Activation("relu")(x)
-		x = AveragePooling2D((8, 8))(x)
+		x = AveragePooling2D((7, 7))(x)
 
 		# softmax classifier
 		x = Flatten()(x)
