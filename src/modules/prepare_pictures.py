@@ -46,7 +46,7 @@ def convert_to_training_csv(nb_sample, pictures_path, output_file):
     
     resume_file = os.path.join(file_help.DATA_CURATED_FOLDER, 'resume_file.csv')
     if os.path.exists(output_file):
-        print('sample already build')
+        print('sample already built')
         return
 
     with open(output_file, 'w') as f:
@@ -77,6 +77,6 @@ def convert_to_training_csv(nb_sample, pictures_path, output_file):
         print("Generation completed")
 
 if __name__ == "__main__":
-    #test with 'Z'
-    convert_to_training_csv(100, 'C:\\prairie\\projet9\\Nuage_compta\\data\\in\\alphabet-dataset', 'C:\\prairie\\projet9\\Nuage_compta\\data\\curated\\handwritten_data.csv' )
-
+    #compute 300 picture/letter
+    convert_to_training_csv(300, 'C:\\prairie\\projet9\\Nuage_compta\\data\\in\\alphabet-dataset', 'C:\\prairie\\projet9\\Nuage_compta\\data\\curated\\handwritten_data.csv' )
+    #print(convert_picture_to_str(10, 'C:\\prairie\\projet9\\Nuage_compta\\data\\in\\alphabet-dataset\\A\\A-0.png'))
