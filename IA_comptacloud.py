@@ -213,10 +213,13 @@ def img_test (model, img) :
 	image = cv2.imread(img)
 	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 	blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+	# blurred = cv2.blur(gray, (5, 5))
+	cleaned = remove_noise_and_smooth(blurred)
+	
 
 	# perform edge detection, find contours in the edge map, and sort the
 	# resulting contours from left-to-right
-	edged = cv2.Canny(blurred, 30, 150)
+	edged = cv2.Canny(cleaned, 30, 150)
 	cnts = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL,
 		cv2.CHAIN_APPROX_SIMPLE)
 	cnts = imutils.grab_contours(cnts)
@@ -225,6 +228,11 @@ def img_test (model, img) :
 	# initialize the list of contour bounding boxes and associated
 	# characters that we'll be OCR'ing
 	chars = []
+
+	#dimensions
+	lettersize = 20
+	padding = 4
+	imgsize = 28
 
 	# loop over the contours
 	for c in cnts:
@@ -246,24 +254,17 @@ def img_test (model, img) :
 			# if the width is greater than the height, resize along the
 			# width dimension
 			if tW > tH:
-				thresh = imutils.resize(thresh, width=28)
+				thresh = imutils.resize(thresh, width=lettersize)
 
 			# otherwise, resize along the height
 			else:
-				thresh = imutils.resize(thresh, height=28)
-
-			# re-grab the image dimensions (now that its been resized)
-			# and then determine how much we need to pad the width and
-			# height such that our image will be 28x28
-			(tH, tW) = thresh.shape
-			dX = int(max(0, 28 - tW) / 2.0)
-			dY = int(max(0, 28 - tH) / 2.0)
+				thresh = imutils.resize(thresh, height=lettersize)
 
 			# pad the image and force 28x28 dimensions
-			padded = cv2.copyMakeBorder(thresh, top=dY, bottom=dY,
-				left=dX, right=dX, borderType=cv2.BORDER_CONSTANT,
+			padded = cv2.copyMakeBorder(thresh, top=padding, bottom=padding,
+				left=padding, right=padding, borderType=cv2.BORDER_CONSTANT,
 				value=(0, 0, 0))
-			padded = cv2.resize(padded, (28, 28))
+			padded = cv2.resize(padded, (imgsize, imgsize))
 
 			# prepare the padded image for classification via our
 			# handwriting OCR model
@@ -294,6 +295,24 @@ def img_test (model, img) :
 		cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
 		cv2.putText(image, label, (x - 10, y - 10),
 			cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 2)
-		# show the image
-		cv2.imshow("Image", image)
-		cv2.waitKey(0)
+	# show the image
+	cv2.imshow("Image", image)
+	cv2.waitKey(0)
+
+
+def remove_noise_and_smooth(img): 
+    filtered = cv2.adaptiveThreshold(img.astype(np.uint8), 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 41, 3) 
+    kernel = np.ones((1, 1), np.uint8) 
+    opening = cv2.morphologyEx(filtered, cv2.MORPH_OPEN, kernel) 
+    closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel) 
+    img = image_smoothening(img) 
+    or_image = cv2.bitwise_or(img, closing) 
+    return or_image 
+
+
+def image_smoothening(img): 
+    ret1, th1 = cv2.threshold(img, 180, 255, cv2.THRESH_BINARY) 
+    ret2, th2 = cv2.threshold(th1, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU) 
+    blur = cv2.GaussianBlur(th2, (1, 1), 0) 
+    ret3, th3 = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU) 
+    return th3 
