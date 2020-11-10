@@ -57,9 +57,11 @@ def convert_to_training_csv(nb_sample, pictures_path, output_file):
                 files = os.listdir(subfolder)
             
                 if(nb_sample > len(files)):
-                    nb_sample = len(files)
+                    nb_sample_calculated = len(files)
+                else :
+                    nb_sample_calculated = nb_sample
 
-                sample_dataset = random.sample(set(files), nb_sample)
+                sample_dataset = random.sample(set(files), nb_sample_calculated)
                 identifier = generate_identifier(subfolder)
                 for sample in sample_dataset:
                     filename = os.path.join(subfolder, sample)
@@ -67,8 +69,8 @@ def convert_to_training_csv(nb_sample, pictures_path, output_file):
 
                     #display progress bar
                     i += 1
-                    done = int(100 * i / nb_sample)
-                    sys.stdout.write("\r%s : [%s%s] %s/%s" % (os.path.basename(subfolder), '=' * done, ' ' * (100-done), i, nb_sample)) 
+                    done = int(100 * i / nb_sample_calculated)
+                    sys.stdout.write("\r%s : [%s%s] %s/%s" % (os.path.basename(subfolder), '=' * done, ' ' * (100-done), i, nb_sample_calculated)) 
                     f.write(row)
                     f_resume.write(sample + '\n')
 

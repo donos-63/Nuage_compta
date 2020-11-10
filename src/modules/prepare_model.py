@@ -133,20 +133,17 @@ def prepare_model(dataset_path, output_path):
 
 def prepare_model2(dataset_path, output_path, characters):
 
-    EPOCHS = 50 #50
+    EPOCHS = 20 #50
     BATCH_SIZE = 128 #128
 
     # Split to train and test
     (data, labels) = load_az_dataset(dataset_path)
-    (digitsData, digitsLabels) = load_mnist_dataset()
-
-    data = np.vstack([data, digitsData])
-    labels = np.hstack([labels, digitsLabels])
+    labels -= 10
 
     x = data
     y = labels
 
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state=5)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.3, random_state=5)
 
     # Change depth of image to 1
     x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)

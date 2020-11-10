@@ -113,9 +113,15 @@ def analyse_picture2(picture_path, labelNames):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 
+    cleaned = remove_noise_and_smooth(blurred)
+
     # perform edge detection, find contours in the edge map, and sort the
     # resulting contours from left-to-right
-    edged = cv2.Canny(blurred, 30, 150)
+    edged = cv2.Canny(cleaned, 30, 150)
+
+    #cv2.imshow("Image", edged)
+    #cv2.waitKey(0)
+
     cnts = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL,
         cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
@@ -137,7 +143,8 @@ def analyse_picture2(picture_path, labelNames):
             # extract the character and threshold it to make the character
             # appear as *white* (foreground) on a *black* background, then
             # grab the width and height of the thresholded image
-            roi = gray[y:y + h, x:x + w]
+            roi = cleaned[y:y + h, x:x + w]
+
             thresh = cv2.threshold(roi, 0, 255,
                 cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
             (tH, tW) = thresh.shape
@@ -145,11 +152,11 @@ def analyse_picture2(picture_path, labelNames):
             # if the width is greater than the height, resize along the
             # width dimension
             if tW > tH:
-                thresh = imutils.resize(thresh, width=28)
+                thresh = imutils.resize(thresh, width=24)
 
             # otherwise, resize along the height
             else:
-                thresh = imutils.resize(thresh, height=28)
+                thresh = imutils.resize(thresh, height=24)
 
             # re-grab the image dimensions (now that its been resized)
             # and then determine how much we need to pad the width and
@@ -162,12 +169,18 @@ def analyse_picture2(picture_path, labelNames):
             padded = cv2.copyMakeBorder(thresh, top=dY, bottom=dY,
                 left=dX, right=dX, borderType=cv2.BORDER_CONSTANT,
                 value=(0, 0, 0))
+            
             padded = cv2.resize(padded, (28, 28))
 
             # prepare the padded image for classification via our
             # handwriting OCR model
             padded = padded.astype("float32") / 255.0
             padded = np.expand_dims(padded, axis=-1)
+
+                # show the image
+            cv2.imshow("Image", padded)
+            cv2.waitKey(0)
+
             # update our list of characters that will be OCR'd
             chars.append((padded, (x, y, w, h)))
 
@@ -187,15 +200,43 @@ def analyse_picture2(picture_path, labelNames):
         label = labelNames[i]
         # draw the prediction on the image
         print("[INFO] {} - {:.2f}%".format(label, prob * 100))
-        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        cv2.putText(image, label, (x - 10, y - 10),
+        cv2.rectangle(cleaned, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        cv2.putText(cleaned, label, (x - 10, y - 10),
             cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 2)
     
     # show the image
-    cv2.imshow("Image", image)
+    cv2.imshow("Image", cleaned)
     cv2.waitKey(0)
+
+
+def image_smoothening(img): 
+    ret1, th1 = cv2.threshold(img, 180, 255, cv2.THRESH_BINARY) 
+    ret2, th2 = cv2.threshold(th1, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU) 
+    blur = cv2.GaussianBlur(th2, (1, 1), 0) 
+    ret3, th3 = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU) 
+    return th3 
+
+
+def remove_noise_and_smooth(img): 
+    filtered = cv2.adaptiveThreshold(img.astype(np.uint8), 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 41, 3) 
+    kernel = np.ones((1, 1), np.uint8) 
+    opening = cv2.morphologyEx(filtered, cv2.MORPH_OPEN, kernel) 
+    closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel) 
+    img = image_smoothening(img) 
+    or_image = cv2.bitwise_or(img, closing) 
+    return or_image 
+
+
+
+
+
+
+
+
+
+
 
 if __name__ == "__main__":
     #test thomas' drawing
     #analyse_picture2('C:\\prairie\\projet9\\Nuage_compta\\data\\in\\charlie.png',  ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'])
-    analyse_picture2('C:\\prairie\\projet9\\Nuage_compta\\data\\in\\charlie.png',  ['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'])
+    analyse_picture2('C:\\prairie\\projet9\\Nuage_compta\\data\\in\\formation-data_ia_test.jpeg',  ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'])
