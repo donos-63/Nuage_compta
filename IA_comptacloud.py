@@ -15,12 +15,21 @@ import cv2
 
 import fct_utiles as fct
 
+car = fct.alphabet
+
+car_path = []
+for c in car :
+    if car.index(c) < 26 :
+        car_path.append(f'alphabet-dataset/{c}/')
+    else :
+        break
+
 
 def load_az_dataset(datasetPath):
 
 	# initialize the list of data and labels
-	data = []
-	labels = []
+	cdata = []
+	clabels = []
 
 	# loop over the rows of the A-Z handwritten digit dataset
 	for row in open(datasetPath):
@@ -30,21 +39,61 @@ def load_az_dataset(datasetPath):
 		label = int(row[0])
 		image = np.array([int(x) for x in row[1:]], dtype="uint8")
 
-		# images are represented as single channel (grayscale) images
-		# that are 28x28=784 pixels -- we need to take this flattened
-		# 784-d list of numbers and repshape them into a 28x28 matrix
-		# image = image.reshape((28, 28))
-
 		# update the list of data and labels
-		data.append(image)
-		labels.append(label)
+		cdata.append(image)
+		clabels.append(label)
 
 	# convert the data and labels to NumPy arrays
-	data = np.array(data, dtype="float32")
-	labels = np.array(labels, dtype="int")
+	cdata = np.array(cdata, dtype="float32")
+	clabels = np.array(clabels, dtype="int")
+
+	# Change depth of image to 1
+	cdata = cdata.reshape(cdata.shape[0], 28, 28, 1)
 
 	# return a 2-tuple of the A-Z data and labels
-	return (data, labels)
+	return (cdata, clabels)
+
+
+
+def load_num_dataset():
+	## NUMBERS
+	# Read the MNIST data and split to train and test
+	f = np.load('DATAS/RAW/mnist.npz')
+	x_train, y_train = f['x_train'], f['y_train']
+	x_test, y_test = f['x_test'], f['y_test']
+	mnist_datas = np.concatenate((x_train,x_test), axis=0)
+	mnist_labels = np.concatenate((y_train, y_test), axis=0)
+	f.close()
+
+	# Reindex for position after alphabet
+	mnist_labels = mnist_labels + 26
+
+	# Change depth of image to 1
+	mnist_datas = mnist_datas.reshape(mnist_datas.shape[0], 28, 28, 1)
+
+	# take 1000 per number
+	numbers = car[26:]
+	index = []
+	labels = mnist_labels.tolist()
+	for n in numbers:
+		i = 0
+		for l in labels:
+			if i >= 1000 :
+				continue
+			if l == int(n)+26:
+				i +=1
+				index.append(labels.index(l))
+
+	ndata = []
+	nlabels = []
+	for i in index:
+		ndata.append(mnist_datas[i])
+		nlabels.append(mnist_labels[i])
+
+	ndata = np.array(ndata)
+	nlabels = np.array(nlabels)
+
+	return ndata, nlabels
 
 
 def train_model (datasetPath, modelName):
@@ -52,14 +101,12 @@ def train_model (datasetPath, modelName):
 	modelPath = fct.MODELS_LOCAL_PATH + modelName + '.h5'
 
 	# Split to train and test
-	data, labels = load_az_dataset(datasetPath)
-	x = data
-	y = labels
-	x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state=5)
+	cdata, clabels = load_az_dataset(datasetPath)
+	ndata, nlabels = load_num_dataset()
 
-	# Change depth of image to 1
-	x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
-	x_test = x_test.reshape(x_test.shape[0], 28, 28, 1)
+	x = np.concatenate((cdata,ndata), axis=0)
+	y = np.concatenate((clabels, nlabels), axis=0)
+	x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state=5)
 
 	# Change type from int to float and normalize to [0, 1]
 	x_train = x_train.astype('float32')
@@ -72,7 +119,7 @@ def train_model (datasetPath, modelName):
 	print(x_test.shape[0], 'test samples')
 
 	# Convert class vectors to binary class matrices (transform the problem to multi-class classification)
-	num_classes = len(fct.alphabet)
+	num_classes = len(car)
 	y_train = keras.utils.to_categorical(y_train, num_classes)
 	y_test = keras.utils.to_categorical(y_test, num_classes)
 
@@ -118,9 +165,11 @@ def computer_metrics (modelPath):
 	model = load_model(modelPath)
 
 	# Split to train and test
-	data, labels = load_az_dataset(datasetPath)
-	x = data
-	y = labels
+	cdata, clabels = load_az_dataset(datasetPath)
+	ndata, nlabels = load_num_dataset()
+
+	x = np.concatenate((cdata,ndata), axis=0)
+	y = np.concatenate((clabels, nlabels), axis=0)
 	x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state=5)
 
 	# Process the images as in training
@@ -280,7 +329,7 @@ def img_test (model, img) :
 	# OCR the characters using our handwriting recognition model
 	preds = model.predict(chars)
 	# define the list of label names
-	labelNames = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	labelNames = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	labelNames = [l for l in labelNames]
 
 	# loop over the predictions and bounding box locations together

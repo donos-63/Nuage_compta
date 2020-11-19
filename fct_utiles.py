@@ -6,16 +6,18 @@ import numpy as np
 import sys
 import csv
 
-alphabet = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
+alphabet = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','0','1','2','3','4','5','6','7','8','9']
 
 # Définition des variables
 DATAS_LOCAL_PATH = './DATAS/'
 RAW_LOCAL_PATH = DATAS_LOCAL_PATH + 'RAW/'
 ZIP_LOCAL_PATH = RAW_LOCAL_PATH + 'alphabet-dataset.zip'
+MNIST_LOCAL_PATH = RAW_LOCAL_PATH + 'mnist.npz'
 CURATED_LOCAL_PATH = DATAS_LOCAL_PATH + 'CURATED/'
 DATASET_PATH = CURATED_LOCAL_PATH + 'dataset.csv'
 MODELS_LOCAL_PATH = './MODELS/'
 URL = 'https://stdatalake006.blob.core.windows.net/public/alphabet-dataset.zip'
+URL_MNIST = 'https://raw.githubusercontent.com/thdiaman/deeplearning/master/OCR/mnist.npz'
 
 
 
@@ -33,7 +35,12 @@ def ensure_data_loaded(car_path):
     if os.path.exists(ZIP_LOCAL_PATH) == False:
         dl_data()
     else :
-        print('Datas already downloaded.')
+        print('Letters datas already downloaded.')
+
+    if os.path.exists(MNIST_LOCAL_PATH) == False:
+        dl_data_mnist()
+    else : 
+        print('Numbers datas already downloaded.')
     
     for cp in car_path :
         if os.path.exists(f'{RAW_LOCAL_PATH}{cp}') == False:
@@ -52,6 +59,12 @@ def dl_data ():
         f.write(r.content)
     print ('Dataset dowloaded successfully.')
 
+def dl_data_mnist ():
+    print ('Downloading...')
+    with open(MNIST_LOCAL_PATH, "wb") as f:
+        r = requests.get(URL_MNIST)
+        f.write(r.content)
+    print ('Dataset dowloaded successfully.')
 
 def extract_data(path):
     print (f'Extracting {path}...')
