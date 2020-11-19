@@ -13,7 +13,7 @@ def compute_sample():
 
     input_folder = os.path.join( file_help.DATA_IN_FOLDER,file_help.ALPHABET_DATASET_FOLDER)
     output_folder = os.path.join( file_help.DATA_CURATED_FOLDER, file_help.DEFAULT_PICTURE_NAME)
-    prep_pic.convert_to_training_csv(10000, input_folder, output_folder )
+    prep_pic.convert_to_training_csv(15000, input_folder, output_folder )
 
     input_folder = os.path.join( file_help.DATA_CURATED_FOLDER, file_help.DEFAULT_PICTURE_NAME)
     output_folder = os.path.join( file_help.DATA_OUT_FOLDER,file_help.MODELS_FOLDER)

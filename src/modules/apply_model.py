@@ -152,11 +152,11 @@ def analyse_picture2(picture_path, labelNames):
             # if the width is greater than the height, resize along the
             # width dimension
             if tW > tH:
-                thresh = imutils.resize(thresh, width=24)
+                thresh = imutils.resize(thresh, width=20)
 
             # otherwise, resize along the height
             else:
-                thresh = imutils.resize(thresh, height=24)
+                thresh = imutils.resize(thresh, height=20)
 
             # re-grab the image dimensions (now that its been resized)
             # and then determine how much we need to pad the width and
@@ -176,10 +176,6 @@ def analyse_picture2(picture_path, labelNames):
             # handwriting OCR model
             padded = padded.astype("float32") / 255.0
             padded = np.expand_dims(padded, axis=-1)
-
-                # show the image
-            cv2.imshow("Image", padded)
-            cv2.waitKey(0)
 
             # update our list of characters that will be OCR'd
             chars.append((padded, (x, y, w, h)))
@@ -225,16 +221,6 @@ def remove_noise_and_smooth(img):
     img = image_smoothening(img) 
     or_image = cv2.bitwise_or(img, closing) 
     return or_image 
-
-
-
-
-
-
-
-
-
-
 
 if __name__ == "__main__":
     #test thomas' drawing
