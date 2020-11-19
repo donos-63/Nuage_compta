@@ -2,3 +2,15 @@
 DATAS/
 
 __pycache__/
+
+MODELS/firstmodel.h5
+
+MODELS/thousandmodel.h5
+
+RESULTS/resultatimgtb.png
+
+RESULTS/resultatimgtb2.png
+
+TESTS/
+
+.vscode/

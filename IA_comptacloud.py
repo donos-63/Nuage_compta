@@ -347,6 +347,7 @@ def img_test (model, img) :
 	# show the image
 	cv2.imshow("Image", image)
 	cv2.waitKey(0)
+	cv2.destroyWindow("Image")
 
 
 def remove_noise_and_smooth(img): 
