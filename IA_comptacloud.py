@@ -345,9 +345,7 @@ def img_test (model, img) :
 		cv2.putText(image, label, (x - 10, y - 10),
 			cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 2)
 	# show the image
-	cv2.imshow("Image", image)
-	cv2.waitKey(0)
-	cv2.destroyWindow("Image")
+	plt.imshow(image)
 
 
 def remove_noise_and_smooth(img): 
